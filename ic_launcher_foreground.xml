@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Garage outer structure (silver/steel) -->
+    <path
+        android:fillColor="#CBD5E1"
+        android:pathData="M54,24 L82,36 L82,80 L74,80 L74,46 L34,46 L34,80 L26,80 L26,36 Z" />
+    <!-- Garage roof accent -->
+    <path
+        android:fillColor="#94A3B8"
+        android:pathData="M54,28 L78,38 L78,42 L30,42 L30,38 Z" />
+    <!-- Orange toolbox / crate inside the garage -->
+    <path
+        android:fillColor="#FF6B00"
+        android:pathData="M38,54 L70,54 L70,80 L38,80 Z" />
+    <!-- Toolbox top handle & lid line -->
+    <path
+        android:fillColor="#FF9E44"
+        android:pathData="M48,49 L60,49 L60,54 L48,54 Z" />
+    <path
+        android:fillColor="#181C26"
+        android:pathData="M38,63 L70,63 L70,66 L38,66 Z" />
+    <!-- Toolbox latch -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M51,61 L57,61 L57,68 L51,68 Z" />
+</vector>

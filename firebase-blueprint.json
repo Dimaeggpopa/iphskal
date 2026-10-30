@@ -1,0 +1,186 @@
+{
+  "entities": {
+    "GarageItem": {
+      "title": "GarageItem",
+      "description": "An inventory item stored in the user's garage or warehouse with QR/barcode, location, emergency photo hint, and platform publication state.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Owner UID" },
+        "title": { "type": "string", "description": "Item title" },
+        "description": { "type": "string", "description": "Item detailed description" },
+        "price": { "type": "integer", "description": "Item price in RUB" },
+        "quantity": { "type": "integer", "description": "Quantity in stock" },
+        "unitLabel": { "type": "string", "description": "Unit label, e.g. шт. or комплект" },
+        "zone": { "type": "string", "description": "Storage zone name, e.g. Гараж, Склад 1, Ангар" },
+        "shelfLocation": { "type": "string", "description": "Detailed shelf/sector/floor location" },
+        "qrCode": { "type": "string", "description": "QR identifier code e.g. #GAR-084-III" },
+        "barcode": { "type": "string", "description": "EAN/Code128 barcode digits" },
+        "serialCode": { "type": "string", "description": "Part number or additional numeric ID" },
+        "photoUri": { "type": "string", "description": "Primary product photo URI" },
+        "hintPhotoUri": { "type": "string", "description": "Emergency shelf location hint photo URI" },
+        "hintNote": { "type": "string", "description": "Emergency note explaining exact physical spot" },
+        "publishedPlatforms": { "type": "array", "description": "List of platform keys where item is published" },
+        "publicationStatus": {
+          "type": "string",
+          "enum": ["draft", "published", "partial", "error", "sold"],
+          "description": "Publication status across connected platforms"
+        },
+        "isSelectedForPublish": { "type": "boolean", "description": "Selected in batch publication queue" },
+        "viewsCount": { "type": "integer", "description": "Total views across platforms" },
+        "inquiriesCount": { "type": "integer", "description": "Total buyer inquiries" },
+        "isVerifiedInInventory": { "type": "boolean", "description": "Checked during warehouse audit" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Server timestamp" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Server timestamp" }
+      },
+      "required": [
+        "userId",
+        "title",
+        "description",
+        "price",
+        "quantity",
+        "unitLabel",
+        "zone",
+        "shelfLocation",
+        "qrCode",
+        "barcode",
+        "serialCode",
+        "photoUri",
+        "hintPhotoUri",
+        "hintNote",
+        "publishedPlatforms",
+        "publicationStatus",
+        "isSelectedForPublish",
+        "viewsCount",
+        "inquiriesCount",
+        "isVerifiedInInventory",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "PlatformConnection": {
+      "title": "PlatformConnection",
+      "description": "Connected classifieds/marketplace platform configuration (Avito, Youla, VK Market, Yandex).",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Owner UID" },
+        "platformKey": {
+          "type": "string",
+          "enum": ["avito", "youla", "vk", "yandex"],
+          "description": "Platform identifier"
+        },
+        "platformName": { "type": "string", "description": "Display name" },
+        "isConnected": { "type": "boolean", "description": "Whether account is linked and active" },
+        "isSelectedForUpload": { "type": "boolean", "description": "Whether selected for 1-click upload" },
+        "accountIdentifier": { "type": "string", "description": "Account phone, email, or profile ID" },
+        "apiClientId": { "type": "string", "description": "API token / client key" },
+        "autoSync": { "type": "boolean", "description": "Automatically sync stock and prices" },
+        "autoPromote": { "type": "boolean", "description": "Enable automatic ad promotion" },
+        "defaultContactPhone": { "type": "string", "description": "Contact phone for ads" },
+        "defaultCityAddress": { "type": "string", "description": "Pickup address for ads" },
+        "syncedCount": { "type": "integer", "description": "Number of published items on this platform" },
+        "lastSyncStatus": { "type": "string", "description": "Last synchronization message" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Server timestamp" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Server timestamp" }
+      },
+      "required": [
+        "userId",
+        "platformKey",
+        "platformName",
+        "isConnected",
+        "isSelectedForUpload",
+        "accountIdentifier",
+        "apiClientId",
+        "autoSync",
+        "autoPromote",
+        "defaultContactPhone",
+        "defaultCityAddress",
+        "syncedCount",
+        "lastSyncStatus",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "BuyerDialog": {
+      "title": "BuyerDialog",
+      "description": "Unified buyer chat thread linked to a marketplace platform and garage item.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Owner UID" },
+        "buyerName": { "type": "string", "description": "Buyer display name" },
+        "platformKey": {
+          "type": "string",
+          "enum": ["avito", "youla", "vk", "yandex"],
+          "description": "Originating marketplace platform"
+        },
+        "itemId": { "type": "string", "description": "Linked garage item ID" },
+        "itemTitle": { "type": "string", "description": "Linked garage item title" },
+        "itemPrice": { "type": "integer", "description": "Linked item price" },
+        "itemShelfLocation": { "type": "string", "description": "Shelf location for quick reference in chat" },
+        "itemQrCode": { "type": "string", "description": "QR code for quick reference in chat" },
+        "itemPhotoUri": { "type": "string", "description": "Item thumbnail URI" },
+        "lastMessage": { "type": "string", "description": "Last message preview" },
+        "timeLabel": { "type": "string", "description": "Formatted time label" },
+        "unreadCount": { "type": "integer", "description": "Number of unread messages" },
+        "messagesLog": { "type": "array", "description": "Bounded list of chat messages" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Server timestamp" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Server timestamp" }
+      },
+      "required": [
+        "userId",
+        "buyerName",
+        "platformKey",
+        "itemId",
+        "itemTitle",
+        "itemPrice",
+        "itemShelfLocation",
+        "itemQrCode",
+        "itemPhotoUri",
+        "lastMessage",
+        "timeLabel",
+        "unreadCount",
+        "messagesLog",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "StorageZone": {
+      "title": "StorageZone",
+      "description": "Physical storage area or rack in the user's garage/warehouse with capacity tracking.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Owner UID" },
+        "name": { "type": "string", "description": "Zone name (e.g. Гараж, Склад 1, Ангар)" },
+        "capacity": { "type": "integer", "description": "Maximum storage slots in this zone" },
+        "description": { "type": "string", "description": "Zone notes" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Server timestamp" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Server timestamp" }
+      },
+      "required": [
+        "userId",
+        "name",
+        "capacity",
+        "description",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/users/{userId}/items/{itemId}": {
+      "schema": { "$ref": "#/entities/GarageItem" },
+      "description": "User's garage and warehouse inventory items"
+    },
+    "/users/{userId}/platforms/{platformId}": {
+      "schema": { "$ref": "#/entities/PlatformConnection" },
+      "description": "User's connected ad platforms"
+    },
+    "/users/{userId}/dialogs/{dialogId}": {
+      "schema": { "$ref": "#/entities/BuyerDialog" },
+      "description": "User's unified buyer dialogs across platforms"
+    },
+    "/users/{userId}/zones/{zoneId}": {
+      "schema": { "$ref": "#/entities/StorageZone" },
+      "description": "User's custom storage zones and capacities"
+    }
+  }
+}

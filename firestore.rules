@@ -1,0 +1,249 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Pillar 1: Global default-deny safety net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidGarageItem(data, userId) {
+      return data.userId is string && data.userId == userId && data.userId == request.auth.uid &&
+             data.title is string && data.title.size() >= 1 && data.title.size() <= 150 &&
+             data.description is string && data.description.size() <= 2000 &&
+             data.price is int && data.price >= 0 && data.price <= 1000000000 &&
+             data.quantity is int && data.quantity >= 0 && data.quantity <= 1000000 &&
+             data.unitLabel is string && data.unitLabel.size() >= 1 && data.unitLabel.size() <= 40 &&
+             data.zone is string && data.zone.size() >= 1 && data.zone.size() <= 60 &&
+             data.shelfLocation is string && data.shelfLocation.size() >= 1 && data.shelfLocation.size() <= 120 &&
+             data.qrCode is string && data.qrCode.size() >= 1 && data.qrCode.size() <= 64 &&
+             data.barcode is string && data.barcode.size() <= 64 &&
+             data.serialCode is string && data.serialCode.size() <= 80 &&
+             data.photoUri is string && data.photoUri.size() <= 1000 &&
+             data.hintPhotoUri is string && data.hintPhotoUri.size() <= 1000 &&
+             data.hintNote is string && data.hintNote.size() <= 500 &&
+             data.publishedPlatforms is list && data.publishedPlatforms.size() <= 10 &&
+             (data.publishedPlatforms.size() == 0 || data.publishedPlatforms[0] is string) &&
+             data.publicationStatus is string &&
+             data.publicationStatus in ['draft', 'published', 'partial', 'error', 'sold'] &&
+             data.isSelectedForPublish is bool &&
+             data.viewsCount is int && data.viewsCount >= 0 &&
+             data.inquiriesCount is int && data.inquiriesCount >= 0 &&
+             data.isVerifiedInInventory is bool &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidPlatformConnection(data, userId) {
+      return data.userId is string && data.userId == userId && data.userId == request.auth.uid &&
+             data.platformKey is string && data.platformKey in ['avito', 'youla', 'vk', 'yandex'] &&
+             data.platformName is string && data.platformName.size() >= 1 && data.platformName.size() <= 60 &&
+             data.isConnected is bool &&
+             data.isSelectedForUpload is bool &&
+             data.accountIdentifier is string && data.accountIdentifier.size() <= 120 &&
+             data.apiClientId is string && data.apiClientId.size() <= 200 &&
+             data.autoSync is bool &&
+             data.autoPromote is bool &&
+             data.defaultContactPhone is string && data.defaultContactPhone.size() <= 40 &&
+             data.defaultCityAddress is string && data.defaultCityAddress.size() <= 200 &&
+             data.syncedCount is int && data.syncedCount >= 0 &&
+             data.lastSyncStatus is string && data.lastSyncStatus.size() <= 200 &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidBuyerDialog(data, userId) {
+      return data.userId is string && data.userId == userId && data.userId == request.auth.uid &&
+             data.buyerName is string && data.buyerName.size() >= 1 && data.buyerName.size() <= 80 &&
+             data.platformKey is string && data.platformKey in ['avito', 'youla', 'vk', 'yandex'] &&
+             data.itemId is string && data.itemId.size() <= 128 &&
+             data.itemTitle is string && data.itemTitle.size() >= 1 && data.itemTitle.size() <= 150 &&
+             data.itemPrice is int && data.itemPrice >= 0 &&
+             data.itemShelfLocation is string && data.itemShelfLocation.size() <= 120 &&
+             data.itemQrCode is string && data.itemQrCode.size() <= 64 &&
+             data.itemPhotoUri is string && data.itemPhotoUri.size() <= 1000 &&
+             data.lastMessage is string && data.lastMessage.size() >= 1 && data.lastMessage.size() <= 500 &&
+             data.timeLabel is string && data.timeLabel.size() >= 1 && data.timeLabel.size() <= 40 &&
+             data.unreadCount is int && data.unreadCount >= 0 &&
+             data.messagesLog is list && data.messagesLog.size() <= 50 &&
+             (data.messagesLog.size() == 0 || data.messagesLog[0] is string) &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidStorageZone(data, userId) {
+      return data.userId is string && data.userId == userId && data.userId == request.auth.uid &&
+             data.name is string && data.name.size() >= 1 && data.name.size() <= 60 &&
+             data.capacity is int && data.capacity >= 1 && data.capacity <= 100000 &&
+             data.description is string && data.description.size() <= 200 &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    match /users/{userId} {
+      match /items/{itemId} {
+        allow get: if isOwner(userId) && isValidId(userId) && isValidId(itemId) && existing().userId == request.auth.uid;
+        allow list: if isOwner(userId) && existing().userId == request.auth.uid;
+
+        allow create: if isOwner(userId) &&
+                         isValidId(userId) &&
+                         isValidId(itemId) &&
+                         incoming().keys().hasAll([
+                           'userId', 'title', 'description', 'price', 'quantity', 'unitLabel',
+                           'zone', 'shelfLocation', 'qrCode', 'barcode', 'serialCode',
+                           'photoUri', 'hintPhotoUri', 'hintNote', 'publishedPlatforms',
+                           'publicationStatus', 'isSelectedForPublish', 'viewsCount',
+                           'inquiriesCount', 'isVerifiedInInventory', 'createdAt', 'updatedAt'
+                         ]) &&
+                         incoming().keys().hasOnly([
+                           'userId', 'title', 'description', 'price', 'quantity', 'unitLabel',
+                           'zone', 'shelfLocation', 'qrCode', 'barcode', 'serialCode',
+                           'photoUri', 'hintPhotoUri', 'hintNote', 'publishedPlatforms',
+                           'publicationStatus', 'isSelectedForPublish', 'viewsCount',
+                           'inquiriesCount', 'isVerifiedInInventory', 'createdAt', 'updatedAt'
+                         ]) &&
+                         isValidGarageItem(incoming(), userId);
+
+        allow update: if isOwner(userId) &&
+                         isValidId(userId) &&
+                         isValidId(itemId) &&
+                         isValidGarageItem(incoming(), userId) &&
+                         incoming().userId == existing().userId &&
+                         incoming().createdAt == existing().createdAt &&
+                         incoming().diff(existing()).affectedKeys().hasOnly([
+                           'title', 'description', 'price', 'quantity', 'unitLabel',
+                           'zone', 'shelfLocation', 'qrCode', 'barcode', 'serialCode',
+                           'photoUri', 'hintPhotoUri', 'hintNote', 'publishedPlatforms',
+                           'publicationStatus', 'isSelectedForPublish', 'viewsCount',
+                           'inquiriesCount', 'isVerifiedInInventory', 'updatedAt'
+                         ]);
+
+        allow delete: if isOwner(userId) && isValidId(userId) && isValidId(itemId) && existing().userId == request.auth.uid;
+      }
+
+      match /platforms/{platformId} {
+        allow get: if isOwner(userId) && isValidId(userId) && isValidId(platformId) && existing().userId == request.auth.uid;
+        allow list: if isOwner(userId) && existing().userId == request.auth.uid;
+
+        allow create: if isOwner(userId) &&
+                         isValidId(userId) &&
+                         isValidId(platformId) &&
+                         incoming().keys().hasAll([
+                           'userId', 'platformKey', 'platformName', 'isConnected',
+                           'isSelectedForUpload', 'accountIdentifier', 'apiClientId',
+                           'autoSync', 'autoPromote', 'defaultContactPhone',
+                           'defaultCityAddress', 'syncedCount', 'lastSyncStatus',
+                           'createdAt', 'updatedAt'
+                         ]) &&
+                         incoming().keys().hasOnly([
+                           'userId', 'platformKey', 'platformName', 'isConnected',
+                           'isSelectedForUpload', 'accountIdentifier', 'apiClientId',
+                           'autoSync', 'autoPromote', 'defaultContactPhone',
+                           'defaultCityAddress', 'syncedCount', 'lastSyncStatus',
+                           'createdAt', 'updatedAt'
+                         ]) &&
+                         isValidPlatformConnection(incoming(), userId);
+
+        allow update: if isOwner(userId) &&
+                         isValidId(userId) &&
+                         isValidId(platformId) &&
+                         isValidPlatformConnection(incoming(), userId) &&
+                         incoming().userId == existing().userId &&
+                         incoming().platformKey == existing().platformKey &&
+                         incoming().createdAt == existing().createdAt &&
+                         incoming().diff(existing()).affectedKeys().hasOnly([
+                           'platformName', 'isConnected', 'isSelectedForUpload',
+                           'accountIdentifier', 'apiClientId', 'autoSync', 'autoPromote',
+                           'defaultContactPhone', 'defaultCityAddress', 'syncedCount',
+                           'lastSyncStatus', 'updatedAt'
+                         ]);
+
+        allow delete: if isOwner(userId) && isValidId(userId) && isValidId(platformId) && existing().userId == request.auth.uid;
+      }
+
+      match /dialogs/{dialogId} {
+        allow get: if isOwner(userId) && isValidId(userId) && isValidId(dialogId) && existing().userId == request.auth.uid;
+        allow list: if isOwner(userId) && existing().userId == request.auth.uid;
+
+        allow create: if isOwner(userId) &&
+                         isValidId(userId) &&
+                         isValidId(dialogId) &&
+                         incoming().keys().hasAll([
+                           'userId', 'buyerName', 'platformKey', 'itemId', 'itemTitle',
+                           'itemPrice', 'itemShelfLocation', 'itemQrCode', 'itemPhotoUri',
+                           'lastMessage', 'timeLabel', 'unreadCount', 'messagesLog',
+                           'createdAt', 'updatedAt'
+                         ]) &&
+                         incoming().keys().hasOnly([
+                           'userId', 'buyerName', 'platformKey', 'itemId', 'itemTitle',
+                           'itemPrice', 'itemShelfLocation', 'itemQrCode', 'itemPhotoUri',
+                           'lastMessage', 'timeLabel', 'unreadCount', 'messagesLog',
+                           'createdAt', 'updatedAt'
+                         ]) &&
+                         isValidBuyerDialog(incoming(), userId);
+
+        allow update: if isOwner(userId) &&
+                         isValidId(userId) &&
+                         isValidId(dialogId) &&
+                         isValidBuyerDialog(incoming(), userId) &&
+                         incoming().userId == existing().userId &&
+                         incoming().createdAt == existing().createdAt &&
+                         incoming().diff(existing()).affectedKeys().hasOnly([
+                           'buyerName', 'platformKey', 'itemId', 'itemTitle',
+                           'itemPrice', 'itemShelfLocation', 'itemQrCode', 'itemPhotoUri',
+                           'lastMessage', 'timeLabel', 'unreadCount', 'messagesLog',
+                           'updatedAt'
+                         ]);
+
+        allow delete: if isOwner(userId) && isValidId(userId) && isValidId(dialogId) && existing().userId == request.auth.uid;
+      }
+
+      match /zones/{zoneId} {
+        allow get: if isOwner(userId) && isValidId(userId) && isValidId(zoneId) && existing().userId == request.auth.uid;
+        allow list: if isOwner(userId) && existing().userId == request.auth.uid;
+
+        allow create: if isOwner(userId) &&
+                         isValidId(userId) &&
+                         isValidId(zoneId) &&
+                         incoming().keys().hasAll([
+                           'userId', 'name', 'capacity', 'description', 'createdAt', 'updatedAt'
+                         ]) &&
+                         incoming().keys().hasOnly([
+                           'userId', 'name', 'capacity', 'description', 'createdAt', 'updatedAt'
+                         ]) &&
+                         isValidStorageZone(incoming(), userId);
+
+        allow update: if isOwner(userId) &&
+                         isValidId(userId) &&
+                         isValidId(zoneId) &&
+                         isValidStorageZone(incoming(), userId) &&
+                         incoming().userId == existing().userId &&
+                         incoming().createdAt == existing().createdAt &&
+                         incoming().diff(existing()).affectedKeys().hasOnly([
+                           'name', 'capacity', 'description', 'updatedAt'
+                         ]);
+
+        allow delete: if isOwner(userId) && isValidId(userId) && isValidId(zoneId) && existing().userId == request.auth.uid;
+      }
+    }
+  }
+}

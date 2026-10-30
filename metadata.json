@@ -1,0 +1,8 @@
+{
+  "name": "Мой гараж",
+  "description": "Управление складом, гаражом, товарами с QR и штрихкодами, фото-подсказками и публикацией в 1 клик на Авито, Юлу, ВК Маркет и Яндекс.Объявления",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
